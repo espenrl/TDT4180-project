@@ -6,15 +6,17 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:maps="using:Windows.UI.Xaml.Controls.Maps"
     xmlns:local="using:MMI"
-    mc:Ignorable="d" Width="480" Height="800">
-    
+    mc:Ignorable="d" d:DesignWidth="320" d:DesignHeight="480">
+
     <Page.DataContext>
         <local:MainViewModel />
     </Page.DataContext>
-    
+
     <Page.Resources>
         <local:BooleanToVisibilityConverter x:Key="BoolToVis" />
-        <local:BooleanToVisibilityConverter x:Key="NegatedBoolToVis" IsReversed="True" />
+        <local:NullToVisibilityConverter x:Key="NullToVis" />
+        <local:NullToVisibilityConverter x:Key="NegatedNullToVis" IsReversed="True" />
+        <local:StringFormatConverter x:Key="StringFormatConverter" />
 
         <Style TargetType="TextBlock">
             <Setter Property="VerticalAlignment" Value="Center" />
@@ -37,34 +39,52 @@
     </Page.Resources>
 
     <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <Pivot Title="Trening">
+        <Pivot x:Name="PivotControl">
             <Pivot.Items>
-                <!-- selected -->
+                <!-- main / selected training -->
                 <PivotItem>
                     <PivotItem.Header>
                         <FontIcon FontSize="40" FontFamily="Segoe UI Emoji" Glyph="&#x1F3C6;" />
                     </PivotItem.Header>
                     <Grid>
-                        <StackPanel Visibility="Visible">
-                            <TextBlock Style="{StaticResource HeaderTextBlock}" Text="Trondheim maraton" />
-                            <TextBlock Text="08.04.16 - 10.04.16" Margin="0,10,0,0" />
-                            <TextBlock Text="nivå: viderekommen" />
-                            <TextBlock Text="start: byen" />
-                            <TextBlock Text="slutt: landet" />
-                            <TextBlock Text="distanse: 42.195 km" />
+                        <StackPanel DataContext="{Binding SelectedTraining}">
+                            <TextBlock Style="{StaticResource HeaderTextBlock}" Text="{Binding Name}" />
+                            <TextBlock Margin="0,10,0,0">
+                                <Run Text="{Binding StartDate, Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0:dd.MM.yy}'}" />
+                                <Run Text=" - " />
+                                <Run Text="{Binding EndDate, Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0:dd.MM.yy}'}" />
+                            </TextBlock>
+                            <TextBlock>
+                                <Run Text="nivå:" />
+                                <Run Text="{Binding Level}" />
+                            </TextBlock>
+                            <TextBlock>
+                                <Run Text="start:" />
+                                <Run Text="{Binding StartLocation}" />
+                            </TextBlock>
+                            <TextBlock>
+                                <Run Text="slutt:" />
+                                <Run Text="{Binding EndLocation}" />
+                            </TextBlock>
+                            <TextBlock>
+                                <Run Text="distanse:" />
+                                <Run Text="{Binding Distance}" />
+                                <Run Text="km" />
+                            </TextBlock>
                             <CheckBox Content="Anonym påmelding?" Margin="0,25,0,0" />
-                            <Button Content="Meld deg på" />
+                            <Button Content="Meld deg på" Command="{Binding ElementName=PivotControl, Path=DataContext.RegisterCommand}" CommandParameter="{Binding ElementName=PivotControl}" />
                         </StackPanel>
-                        <StackPanel Visibility="Collapsed">
+
+                        <StackPanel Visibility="{Binding SelectedTraining, Converter={StaticResource NullToVis}}" Background="White">
                             <TextBlock Style="{StaticResource HeaderTextBlock}" Text="Ingen konkurranse" />
                             <TextBlock Text="Du er ikke påmeldt" />
-                            <Button Content="Gå til liste" />
+                            <Button Content="Gå til liste" Click="ButtonClickGotoList" />
                         </StackPanel>
-                        <StackPanel Visibility="Collapsed">
-                            <TextBlock Style="{StaticResource HeaderTextBlock}" Text="Trondheim maraton" />
+                        <StackPanel Visibility="{Binding ActiveTraining, Converter={StaticResource NegatedNullToVis}}" Background="White">
+                            <TextBlock Style="{StaticResource HeaderTextBlock}" Text="{Binding ActiveTraining.Training.Name}" />
                             <TextBlock Text="2 dager igjen" />
                             <TextBlock Text="Byen - Landet" />
-                            <Grid>
+                            <Grid Margin="0,15,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
@@ -76,28 +96,38 @@
                                     <RowDefinition Height="*" />
                                 </Grid.RowDefinitions>
 
-                                <TextBlock Grid.Column="0" Grid.Row="0" Text="framgang:" />
+                                <TextBlock Grid.Column="0" Grid.Row="0" Text="framgang:" Margin="0,0,10,0" />
 
-                                <StackPanel Grid.Column="0" Grid.Row="1">
-
+                                <StackPanel Grid.Column="0" Grid.Row="1" Margin="5">
                                     <TextBlock Text="totalt" />
                                     <TextBlock Text="0/42.195km" />
                                     <TextBlock Text="0/110750 steg" />
                                 </StackPanel>
 
-                                <StackPanel Grid.Column="0" Grid.Row="2">
+                                <StackPanel Grid.Column="0" Grid.Row="2" Margin="5">
                                     <TextBlock Text="i dag:" />
                                     <TextBlock Text="0 km" />
                                     <TextBlock Text="0 steg" />
+                                    <Button Command="{Binding AddStepsCommand}">
+                                        <FontIcon FontFamily="Segoe UI Emoji" Glyph="&#x1F463;" />
+                                    </Button>
                                 </StackPanel>
 
-                                <StackPanel Grid.Column="0" Grid.Row="3">
+                                <StackPanel Grid.Column="0" Grid.Row="3" Margin="5">
                                     <TextBlock Text="snitt:" />
                                     <TextBlock Text="0 km" />
                                     <TextBlock Text="0 steg" />
                                 </StackPanel>
 
-                                <maps:MapControl Grid.Column="1" Grid.Row="0" Grid.RowSpan="4" />
+                                <maps:MapControl Grid.Column="1" Grid.Row="0" Grid.RowSpan="4" Margin="40,0,0,0"
+                                                  LoadingStatusChanged="MapLoadingStatusChanged">
+                                    <FontIcon FontSize="30" FontFamily="Segoe UI Symbol" Glyph="&#x1F3C1;" />
+                                </maps:MapControl>
+                                <Button Grid.Column="1" Grid.Row="0" Grid.RowSpan="4"
+                                        VerticalAlignment="Top" HorizontalAlignment="Right"
+                                        Click="ButtonClickGotoMap">
+                                    <FontIcon FontFamily="Segoe UI Symbol" FontSize="30" Glyph="&#xE24D;" />
+                                </Button>
                             </Grid>
                         </StackPanel>
                     </Grid>
@@ -116,7 +146,9 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0" Style="{StaticResource HeaderTextBlock}" Text="Trondheim maraton" />
-                        <maps:MapControl Grid.Row="1" />
+                        <maps:MapControl Grid.Row="1" LoadingStatusChanged="MapLoadingStatusChanged">
+                            <FontIcon FontSize="30" FontFamily="Segoe UI Symbol" Glyph="&#x1F3C1;" />
+                        </maps:MapControl>
                         <StackPanel Grid.Row="2" Orientation="Horizontal">
                             <TextBlock FontSize="22" Text="1. Joakim" />
 
@@ -125,7 +157,7 @@
                         </StackPanel>
                     </Grid>
                 </PivotItem>
-                
+
                 <!-- list -->
                 <PivotItem>
                     <PivotItem.Header>
@@ -144,7 +176,7 @@
                             <Button Grid.Column="2" Content="filter" />
                         </Grid>
 
-                        <local:ListViewEx ItemsSource="{Binding Items}">
+                        <local:ListViewEx ItemsSource="{Binding Items}" SelectedItem="{Binding SelectedTraining, Mode=TwoWay}">
                             <!-- make items stretch to width of ListView -->
                             <local:ListViewEx.ItemContainerStyle>
                                 <Style TargetType="ListViewItem">
@@ -166,9 +198,10 @@
                                             <FontIcon Grid.Column="1" FontSize="22" FontFamily="Segoe UI Emoji" Glyph="&#x1F4AA;" />
                                             <FontIcon Grid.Column="2" FontSize="22" FontFamily="Segoe UI Symbol" Glyph="&#xE10B;" />
                                         </Grid>
-                                        <Grid Margin="10,0,0,0" Visibility="{Binding Path=IsSelected, Converter={StaticResource BoolToVis}}">
+                                        <Grid Margin="15,0,0,0" Visibility="{Binding Path=IsSelected, Converter={StaticResource BoolToVis}}">
                                             <Grid.ColumnDefinitions>
                                                 <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="20" />
                                                 <ColumnDefinition Width="*" />
                                             </Grid.ColumnDefinitions>
                                             <Grid.RowDefinitions>
@@ -178,12 +211,27 @@
                                                 <RowDefinition Height="15" />
                                                 <RowDefinition Height="Auto" />
                                             </Grid.RowDefinitions>
-                                            
-                                            <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="2" FontSize="22" Text="08.04.16 - 10.04.16" />
-                                            <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="2" FontSize="22" Text="nivå: viderekommen" />
-                                            <TextBlock Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="2" FontSize="22" Text="distanse: 42.195km" />
-                                            <Button Grid.Column="0" Grid.Row="4" HorizontalAlignment="Center" Content="Meld på/av" />
-                                            <Button Grid.Column="1" Grid.Row="4" HorizontalAlignment="Center" Content="Registrer skritt" />
+
+                                            <TextBlock Grid.Column="0" Grid.Row="0" Grid.ColumnSpan="3" FontSize="22">
+                                                <Run Text="{Binding StartDate, Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0:dd.MM.yy}'}" />
+                                                <Run Text=" - " />
+                                                <Run Text="{Binding EndDate, Converter={StaticResource StringFormatConverter}, ConverterParameter='{}{0:dd.MM.yy}'}" />
+                                            </TextBlock>
+                                            <TextBlock Grid.Column="0" Grid.Row="1" Grid.ColumnSpan="3" FontSize="22">
+                                                <Run Text="nivå:" />
+                                                <Run Text="{Binding Level}" />
+                                            </TextBlock>
+                                            <TextBlock Grid.Column="0" Grid.Row="2" Grid.ColumnSpan="3" FontSize="22">
+                                                <Run Text="distanse:" />
+                                                <Run Text="{Binding Distance}" />
+                                                <Run Text="km" />
+                                            </TextBlock>
+                                            <Button Grid.Column="0" Grid.Row="4" HorizontalAlignment="Right" Content="Meld på/av"
+                                                    Command="{Binding ElementName=PivotControl, Path=DataContext.RegisterCommand}"
+                                                    CommandParameter="{Binding ElementName=PivotControl}" />
+                                            <Button Grid.Column="2" Grid.Row="4" HorizontalAlignment="Left"
+                                                    Content="Registrer skritt"
+                                                    Command="{Binding ElementName=PivotControl, Path=DataContext.AddStepsCommand}" />
                                         </Grid>
                                     </StackPanel>
                                 </DataTemplate>
@@ -191,7 +239,7 @@
                         </local:ListViewEx>
                     </StackPanel>
                 </PivotItem>
-                
+
                 <!-- settings -->
                 <PivotItem>
                     <PivotItem.Header>
@@ -199,11 +247,13 @@
                     </PivotItem.Header>
                     <StackPanel>
                         <TextBlock Style="{StaticResource HeaderTextBlock}" Text="Innstillinger / min profil" />
-                        
+
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,10">
                             <TextBlock FontSize="22" Text="Joakim" />
-                            <FontIcon FontSize="22" FontFamily="Segoe UI Emoji" Glyph="&#x1F3C6;" />
+                            <FontIcon Margin="15,0,0,0" FontSize="22" FontFamily="Segoe UI Emoji" Glyph="&#x1F3C6;" />
                             <TextBlock FontSize="22" Text="5" />
+                            <FontIcon Margin="15,0,0,0" FontSize="22" FontFamily="Segoe UI Emoji" Glyph="&#x2610;" />
+                            <TextBlock FontSize="22" Text="Anon" />
                         </StackPanel>
 
                         <Button Content="Registrer skritt" Command="{Binding AddStepsCommand}" Margin="0,10" />

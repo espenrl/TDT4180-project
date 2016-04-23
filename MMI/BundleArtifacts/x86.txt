@@ -1,0 +1,2 @@
+MainPackage=C:\Users\EspenRøvik\Source\Repos\TDT4180-project\MMI\bin\x86\Release\MMI_1.0.2.0_x86.appx
+SymbolPackage=C:\Users\EspenRøvik\Source\Repos\TDT4180-project\MMI\AppPackages\MMI_1.0.2.0_Test\MMI_1.0.2.0_x86.appxsym

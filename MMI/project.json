@@ -1,8 +1,8 @@
 ﻿{
   "dependencies": {
-    "Microsoft.NETCore.UniversalWindowsPlatform": "5.0.0",
-    "MvvmLight": "5.2.0",
-    "Jetbrains.Annotations": "10.1.4"
+    "Jetbrains.Annotations": "10.1.4",
+    "Microsoft.NETCore.UniversalWindowsPlatform": "5.1.0",
+    "MvvmLight": "5.2.0"
   },
   "frameworks": {
     "uap10.0": {}

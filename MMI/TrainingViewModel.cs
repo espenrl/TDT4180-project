@@ -1,19 +1,32 @@
+using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using JetBrains.Annotations;
 
 namespace MMI
 {
-    public class ItemViewModel : INotifyPropertyChanged
+    public class TrainingViewModel : INotifyPropertyChanged
     {
         private bool _isSelected;
 
-        public ItemViewModel(string name)
+        public TrainingViewModel(string name, string level, double distance, DateTime startDate, DateTime endDate, string startLocation, string endLocation)
         {
             Name = name;
+            Level = level;
+            Distance = distance;
+            StartDate = startDate;
+            EndDate = endDate;
+            StartLocation = startLocation;
+            EndLocation = endLocation;
         }
 
         public string Name { get; }
+        public string StartLocation { get; }
+        public string EndLocation { get; }
+        public string Level { get; }
+        public double Distance { get; }
+        public DateTime StartDate { get; }
+        public DateTime EndDate { get; }
 
         public bool IsSelected
         {
